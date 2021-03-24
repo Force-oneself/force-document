@@ -1,30 +1,30 @@
 | Name                                         | Default                                         | Description                                                  |
 | :------------------------------------------- | :---------------------------------------------- | :----------------------------------------------------------- |
-| feign.autoconfiguration.jackson.enabled      | `false`                                         | If true, PageJacksonModule and SortJacksonModule bean will be provided for Jackson page decoding. |
-| feign.circuitbreaker.enabled                 | `false`                                         | If true, an OpenFeign client will be wrapped with a Spring Cloud CircuitBreaker circuit breaker. |
+| feign.autoconfiguration.jackson.enabled      | `false`                                         | 如果为true，则将提供PageJacksonModule和SortJacksonModule bean用于Jackson页面解码. |
+| feign.circuitbreaker.enabled                 | `false`                                         | 如果为true，则将使用Spring Cloud CircuitBreaker断路器包装OpenFeign客户端. |
 | feign.client.config                          |                                                 |                                                              |
-| feign.client.decode-slash                    | `true`                                          | Feign clients do not encode slash `/` characters by default. To change this behavior, set the `decodeSlash` to `false`. |
+| feign.client.decode-slash                    | `true`                                          | 伪客户端默认情况下不对斜杠“ /”字符进行编码。 要更改此行为，请将“ decodeSlash”设置为“ false”. |
 | feign.client.default-config                  | `default`                                       |                                                              |
 | feign.client.default-to-properties           | `true`                                          |                                                              |
-| feign.compression.request.enabled            | `false`                                         | Enables the request sent by Feign to be compressed.          |
-| feign.compression.request.mime-types         | `[text/xml, application/xml, application/json]` | The list of supported mime types.                            |
-| feign.compression.request.min-request-size   | `2048`                                          | The minimum threshold content size.                          |
-| feign.compression.response.enabled           | `false`                                         | Enables the response from Feign to be compressed.            |
-| feign.compression.response.useGzipDecoder    | `false`                                         | Enables the default gzip decoder to be used.                 |
-| feign.encoder.charset-from-content-type      | `false`                                         | Indicates whether the charset should be derived from the {@code Content-Type} header. |
+| feign.compression.request.enabled            | `false`                                         | 允许压缩Feign发送的请求.                                     |
+| feign.compression.request.mime-types         | `[text/xml, application/xml, application/json]` | 支持的mime类型列表.                                          |
+| feign.compression.request.min-request-size   | `2048`                                          | 最小阈值内容大小.                                            |
+| feign.compression.response.enabled           | `false`                                         | 可以压缩来自Feign的响应.                                     |
+| feign.compression.response.useGzipDecoder    | `false`                                         | 启用要使用的默认gzip解码器.                                  |
+| feign.encoder.charset-from-content-type      | `false`                                         | 指示字符集是否应从{@code Content-Type}标头派生.              |
 | feign.httpclient.connection-timeout          | `2000`                                          |                                                              |
 | feign.httpclient.connection-timer-repeat     | `3000`                                          |                                                              |
 | feign.httpclient.disable-ssl-validation      | `false`                                         |                                                              |
-| feign.httpclient.enabled                     | `true`                                          | Enables the use of the Apache HTTP Client by Feign.          |
+| feign.httpclient.enabled                     | `true`                                          | 允许通过Feign使用Apache HTTP客户端.                          |
 | feign.httpclient.follow-redirects            | `true`                                          |                                                              |
-| feign.httpclient.hc5.enabled                 | `false`                                         | Enables the use of the Apache HTTP Client 5 by Feign.        |
-| feign.httpclient.hc5.pool-concurrency-policy |                                                 | Pool concurrency policies.                                   |
-| feign.httpclient.hc5.pool-reuse-policy       |                                                 | Pool connection re-use policies.                             |
-| feign.httpclient.hc5.socket-timeout          | `5`                                             | Default value for socket timeout.                            |
-| feign.httpclient.hc5.socket-timeout-unit     |                                                 | Default value for socket timeout unit.                       |
+| feign.httpclient.hc5.enabled                 | `false`                                         | 允许通过Feign使用Apache HTTP Client 5.                       |
+| feign.httpclient.hc5.pool-concurrency-policy |                                                 | 池并发策略.                                                  |
+| feign.httpclient.hc5.pool-reuse-policy       |                                                 | 池连接重用策略.                                              |
+| feign.httpclient.hc5.socket-timeout          | `5`                                             | 套接字超时的默认值.                                          |
+| feign.httpclient.hc5.socket-timeout-unit     |                                                 | 套接字超时单位的默认值.                                      |
 | feign.httpclient.max-connections             | `200`                                           |                                                              |
 | feign.httpclient.max-connections-per-route   | `50`                                            |                                                              |
 | feign.httpclient.time-to-live                | `900`                                           |                                                              |
 | feign.httpclient.time-to-live-unit           |                                                 |                                                              |
-| feign.metrics.enabled                        | `true`                                          | Enables metrics capability for Feign.                        |
-| feign.okhttp.enabled                         | `false`                                         | Enables the use of the OK HTTP Client by Feign.              |
+| feign.metrics.enabled                        | `true`                                          | 启用伪装的指标功能.                                          |
+| feign.okhttp.enabled                         | `false`                                         | 允许通过Feign使用OK HTTP客户端.                              |

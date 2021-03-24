@@ -18,3 +18,16 @@ cat ~/.ssh/id_rsa.pub
 ssh -T git@gitee.com // 测试是否成功即可
 ```
 
+## 删除历史提交记录
+
+``` tex
+git pull
+git checkout --orphan latest_branch
+git add -A
+git commit -am "init"
+git branch -D master
+git branch -m master
+git push -f origin master
+git branch --set-upstream-to=origin/master master
+```
+
