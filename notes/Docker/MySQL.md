@@ -24,7 +24,7 @@ docker run -it -p 3306:3306 --name mysql \
 /bin/bash : 使启动的镜像停留在后台运行（不添加会启动便迅速Exited）
 ```
 
-## 在 mydata/mysql/conf/ 创建my.cnf，写入如下配置：
+## 在 docker/mysql/conf/ 创建my.cnf，写入如下配置：
 
 ``` tex
 [client]
