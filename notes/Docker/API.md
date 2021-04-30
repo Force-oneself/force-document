@@ -4,8 +4,8 @@
 
 ### docker run
 
-``` tex
-命令的格式：
+``` shell
+# 命令的格式：
 Usage: docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 -a, --attach=[] 登录容器（以docker run -d启动的容器）
 -c, --cpu-shares=0 设置容器CPU权重，在CPU共享场景使用
@@ -40,20 +40,18 @@ Usage: docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
 --volumes-from=[] 给容器挂载其他容器上的卷，挂载到容器的某个目录
 -w, --workdir="" 指定容器的工作目录
 
->>>>>> 详细讲解
-端口暴露
--P参数：docker自动映射暴露端口；
-
-docker run -d -P training/webapp <span style="color:#009900;">//docker自动在host上打开49000到49900的端口，映射到容器（由镜像指定，或者--expose参数指定）的暴露端口；</span>
+# 详细讲解
+# 端口暴露
+-P参数：docker # 自动映射暴露端口；
+docker run -d -P training/webapp <span style="color:#009900;"> #docker自动在host上打开49000到49900的端口，映射到容器（由镜像指定，或者--expose参数指定）的暴露端口；</span>
 -p参数：指定端口或IP进行映射；
 
-docker run -d -p 5000:80 training/webapp <span style="color:#009900;">//host上5000号端口，映射到容器暴露的80端口；</span>
-docker run -d -p 127.0.0.1:5000:80 training/webapp <span style="color:#009900;">//host上127.0.0.1:5000号端口，映射到容器暴露的80端口；</span>
+docker run -d -p 5000:80 training/webapp <span style="color:#009900;"> #host上5000号端口，映射到容器暴露的80端口；</span>
+docker run -d -p 127.0.0.1:5000:80 training/webapp <span style="color:#009900;">#host上127.0.0.1:5000号端口，映射到容器暴露的80端口；</span>
 docker run -d -p 127.0.0.1::5000 training/webapp <span style="color:#009900;">//host上127.0.0.1:随机端口，映射到容器暴露的80端口；</span>
 docker run -d -p 127.0.0.1:5000:5000/udp training/webapp <span style="color:#009900;">//绑定udp端口；</span>
 
-网络配置
-
+# 网络配置
 --net=bridge： <span style="color:#009900;">//使用docker daemon指定的网桥</span>
 --net=host： <span style="color:#009900;">//容器使用主机的网络</span>
 --net=container:NAME_or_ID：<span style="color:#009900;">//使用其他容器的网路，共享IP和PORT等网络资源</span>
