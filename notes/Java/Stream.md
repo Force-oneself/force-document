@@ -103,7 +103,7 @@ public interface Closeable {
 
 `Stream`流水线组织结构示意图：
 
-<img src="./Stream流水线组织结构示意图.png" style="zoom:150%;" />
+<img src="D:\Development\ForceOneself\Github\force-document\notes\Java\Stream流水线组织结构示意图.png" style="zoom:150%;" />
 
 ## Collection
 
@@ -312,22 +312,6 @@ private static final class OfRef<T> extends ReferencePipeline.StatefulOp<T, T> {
         private final boolean isNaturalSort;
         private final Comparator<? super T> comparator;
 
-        OfRef(AbstractPipeline<?, T, ?> upstream) {
-            super(upstream, StreamShape.REFERENCE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.IS_SORTED);
-            this.isNaturalSort = true;
-            @SuppressWarnings("unchecked")
-            Comparator<? super T> comp = (Comparator<? super T>) Comparator.naturalOrder();
-            this.comparator = comp;
-        }
-
-        OfRef(AbstractPipeline<?, T, ?> upstream, Comparator<? super T> comparator) {
-            super(upstream, StreamShape.REFERENCE,
-                  StreamOpFlag.IS_ORDERED | StreamOpFlag.NOT_SORTED);
-            this.isNaturalSort = false;
-            this.comparator = Objects.requireNonNull(comparator);
-        }
-
         @Override
         public Sink<T> opWrapSink(int flags, Sink<T> sink) {
             Objects.requireNonNull(sink);
@@ -340,18 +324,6 @@ private static final class OfRef<T> extends ReferencePipeline.StatefulOp<T, T> {
                 return new RefSortingSink<>(sink, comparator);
         }
 
-        @Override
-        public <P_IN> Node<T> opEvaluateParallel(PipelineHelper<T> helper, Spliterator<P_IN> spliterator, IntFunction<T[]> generator) {
-
-            if (StreamOpFlag.SORTED.isKnown(helper.getStreamAndOpFlags()) && isNaturalSort) {
-                return helper.evaluate(spliterator, false, generator);
-            }
-            else {
-                T[] flattenedData = helper.evaluate(spliterator, true, generator).asArray(generator);
-                Arrays.parallelSort(flattenedData, comparator);
-                return Nodes.node(flattenedData);
-            }
-        }
     }
 ```
 
@@ -942,7 +914,7 @@ interface Sink<T> extends Consumer<T> {
 
 ​	在上述的`中间操作`管道流中都是通过匿名类继承`ChainedReference`实现`onWrapSink(int, Sink)`返回一个指定操作的`Sink`。
 
-### TerminalOp提供的Sink
+### TerminalSink
 
 ​	这里为什么讲`提供`呢？这是因为不同的实现TerminalOp的子类中在实现`java.util.stream.TerminalOp#evaluateSequential`中都是通过`helper.wrapAndCopyInto(TerminalOp子类实现提供的Sink, spliterator)`中通过参数传递的方式提供的，不同的子类传递的方式不一样所以此处用了一个`提供Sink`
 
@@ -1016,13 +988,121 @@ static abstract class ForEachOp<T> implements TerminalOp<T, Void>, TerminalSink<
     }
 ```
 
+## Collector
 
+​	在Collector中有以下几个实现接口：
 
-## 结果
+* Supplier<A>：结果类型的提供器。
+* BiConsumer<A, T>：将元素放入结果的累加器。
+* BinaryOperator<A>：合并部分结果的组合器。
+* Function<A, R>：对结果类型转换为最终结果类型的转换器。
+* Set<Characteristics>：保存Collector特征的集合
 
-| 返回类型 | 对应的结束操作                    |
-| -------- | --------------------------------- |
-| boolean  | anyMatch() allMatch() noneMatch() |
-| Optional | findFirst() findAny()             |
-| 归约结果 | reduce() collect()                |
-| 数组     | toArray()                         |
+## 并行流
+
+​	前述都是基于串行流的讲解，其实并行流也是基于上述的`helper.wrapAndCopyInto(op.sinkSupplier.get(), spliterator)`这个方法上面做的一层基于`ForkJoinTask`多线程框架的封装。
+
+### ForkJoinTask
+
+​	ForkJoin框架的思想就是`分而治之`，它将一个大任务切割为多个小任务这个过程称为`fork`，将每个任务的执行的结果进行汇总的过程称为`join`。ForkJoin框架相关的接口关系图如下：
+
+<img src="Stream-ForkJoin关系图.png" style="zoom:150%;" />
+
+### AbstractTask
+
+​	类路径`java.util.stream.AbstractTask`，AbstractTask继承了在JUC中已经封装好的ForkJoinTask抽象子类`java.util.concurrent.CountedCompleter`。
+
+​	此类基于CountedCompleter ，它是fork-join任务的一种形式，其中每个任务都有未完成子代的信号量计数，并且该任务隐式完成并在其最后一个子代完成时得到通知。 内部节点任务可能会覆盖CountedCompleter的onCompletion方法，以将子任务的结果合并到当前任务的结果中。
+​	拆分和设置子任务链接是由内部节点的compute()完成的。 在叶节点的compute()时间，可以确保将为所有子代设置父代的子代相关字段（包括父代子代的同级链接）。
+
+​	例如，执行减少任务的任务将覆盖doLeaf()以使用Spliterator对该叶节点的块执行减少Spliterator ，并覆盖onCompletion()以合并内部节点的子任务的结果：
+
+```java
+@Override
+protected ReduceTask<P_IN, P_OUT, R, S> makeChild(Spliterator<P_IN> spliterator) {
+    // 返回一个ForkJoinTask任务
+    return new ReduceTask<>(this, spliterator);
+}
+
+@Override
+protected S doLeaf() {
+    // 其他实现大同小异
+    return helper.wrapAndCopyInto(op.makeSink(), spliterator);
+}
+
+@Override
+public void onCompletion(CountedCompleter<?> caller) {
+    // 非叶子节点进行结果组合
+    if (!isLeaf()) {
+        S leftResult = leftChild.getLocalResult();
+        leftResult.combine(rightChild.getLocalResult());
+        setLocalResult(leftResult);
+    }
+    // GC spliterator, left and right child
+    super.onCompletion(caller);
+}
+```
+
+​	AbstractTask封装了分片任务的算法模板，通过是`Spliterator`的`trySplit()`方法来实现分片的细节，详细算法源码如下(类路径:`java.util.stream.AbstractTask#compute`)：
+
+``` java
+@Override
+public void compute() {
+    // 将当前这个spliterator作为右节点（此时为root节点）
+    Spliterator<P_IN> rs = spliterator, ls; 
+    // 评估任务的大小
+    long sizeEstimate = rs.estimateSize();
+    // 获取任务阈值
+    long sizeThreshold = getTargetSize(sizeEstimate);
+    boolean forkRight = false;
+    @SuppressWarnings("unchecked") K task = (K) this;
+    // 细节不多赘述，下面我用图来讲解算法
+      /**
+         * 根节点指定为：右边节点
+         *              root
+         *              split()
+         *    left               right
+         * left.fork()
+         *                       split()
+         *                   l            r
+         *            rs = ls
+         *                      right.fork()
+         *    split()
+         * l           r
+         *    l.fork()
+         */
+    while (sizeEstimate > sizeThreshold && (ls = rs.trySplit()) != null) {
+        K leftChild, rightChild, taskToFork;
+        task.leftChild  = leftChild = task.makeChild(ls);
+        task.rightChild = rightChild = task.makeChild(rs);
+        task.setPendingCount(1);
+        if (forkRight) {
+            forkRight = false;
+            // 左右节点切换进行fork和split
+            rs = ls;
+            task = leftChild;
+            taskToFork = rightChild;
+        }
+        else {
+            forkRight = true;
+            task = rightChild;
+            taskToFork = leftChild;
+        }
+        // fork任务加入队列中去
+        taskToFork.fork();
+        sizeEstimate = rs.estimateSize();
+    }
+    // 将执行doLeaf底层就是单个串行流的操作
+    task.setLocalResult(task.doLeaf());
+    // 将结果组合成一个最终结果
+    task.tryComplete();
+}
+```
+
+​	AbstractTask执行与分片流程图如下：
+
+![](Stream并行流ForkJoin执行流程图.jpg)
+
+到这里`Stream`流的相关知识介绍到这，这里附上一副总体图来加深下印象
+
+![](Java Stream源码流程图.jpg)
